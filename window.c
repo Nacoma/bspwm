@@ -175,6 +175,7 @@ void manage_window(xcb_window_t win, rule_consequence_t *csq, int fd)
 
 	uint32_t values[] = {CLIENT_EVENT_MASK | (focus_follows_pointer ? XCB_EVENT_MASK_ENTER_WINDOW : 0)};
 	xcb_change_window_attributes(dpy, win, XCB_CW_EVENT_MASK, values);
+	set_window_state(win, XCB_ICCCM_WM_STATE_NORMAL);
 
 	if (d == m->desk) {
 		show_node(d, n);
@@ -198,11 +199,27 @@ void manage_window(xcb_window_t win, rule_consequence_t *csq, int fd)
 	free(csq->state);
 }
 
+void set_window_state(xcb_window_t win, xcb_icccm_wm_state_t state)
+{
+   xcb_icccm_wm_hints_t hints;
+   xcb_icccm_wm_hints_set_none(&hints);
+   hints.flags = XCB_ICCCM_WM_HINT_STATE;
+   if (state == XCB_ICCCM_WM_STATE_NORMAL) {
+	   xcb_icccm_wm_hints_set_normal(&hints);
+   } else if (state == XCB_ICCCM_WM_STATE_WITHDRAWN) {
+	   xcb_icccm_wm_hints_set_withdrawn(&hints);
+   } else if (state == XCB_ICCCM_WM_STATE_ICONIC) {
+	   xcb_icccm_wm_hints_set_iconic(&hints);
+   }
+   xcb_icccm_set_wm_hints(dpy, win, &hints);
+}
+
 void unmanage_window(xcb_window_t win)
 {
 	coordinates_t loc;
 	if (locate_window(win, &loc)) {
 		put_status(SBSC_MASK_NODE_UNMANAGE, "node_unmanage 0x%08X 0x%08X 0x%08X\n", loc.monitor->id, loc.desktop->id, win);
+		set_window_state(win, XCB_ICCCM_WM_STATE_WITHDRAWN);
 		remove_node(loc.monitor, loc.desktop, loc.node);
 		arrange(loc.monitor, loc.desktop);
 	} else {

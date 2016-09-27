@@ -33,6 +33,7 @@
 
 void schedule_window(xcb_window_t win);
 void manage_window(xcb_window_t win, rule_consequence_t *csq, int fd);
+void set_window_state(xcb_window_t win, xcb_icccm_wm_state_t state);
 void unmanage_window(xcb_window_t win);
 bool is_presel_window(xcb_window_t win);
 void initialize_presel_feedback(node_t *n);
